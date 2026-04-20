@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { handleApiError, createSuccessResponse } from '@/lib/error-handler'
+import { DatabaseError, ValidationError } from '@/lib/errors'
 
 // POST: Neuen Fall erstellen
 export async function POST() {
@@ -8,40 +10,32 @@ export async function POST() {
       .rpc('create_case')
     
     if (error) {
-      console.error('Supabase error:', error)
-      return NextResponse.json(
-        { error: 'Fehler beim Erstellen des Falls' },
-        { status: 500 }
-      )
+      throw new DatabaseError('Fehler beim Erstellen des Falls', error)
     }
     
-    return NextResponse.json({
-      success: true,
+    if (!data) {
+      throw new ValidationError('Keine Daten vom Server erhalten')
+    }
+    
+    return createSuccessResponse({
       caseId: data.id,
       caseCode: data.case_code
     })
     
   } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json(
-      { error: 'Interner Serverfehler' },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }
 
 // GET: Fall nach Code laden
 export async function GET(request: NextRequest) {
-  const caseCode = request.nextUrl.searchParams.get('code')
-  
-  if (!caseCode) {
-    return NextResponse.json(
-      { error: 'Fallcode erforderlich' },
-      { status: 400 }
-    )
-  }
-  
   try {
+    const caseCode = request.nextUrl.searchParams.get('code')
+    
+    if (!caseCode) {
+      throw new ValidationError('Fallcode ist erforderlich')
+    }
+    
     const { data, error } = await supabase
       .from('cases')
       .select('*')
@@ -50,21 +44,14 @@ export async function GET(request: NextRequest) {
     
     if (error) {
       if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Fall nicht gefunden' },
-          { status: 404 }
-        )
+        throw new DatabaseError('Fall nicht gefunden', error)
       }
-      throw error
+      throw new DatabaseError('Datenbankfehler beim Laden', error)
     }
     
-    return NextResponse.json({ success: true, case: data })
+    return createSuccessResponse({ case: data })
     
   } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json(
-      { error: 'Interner Serverfehler' },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }

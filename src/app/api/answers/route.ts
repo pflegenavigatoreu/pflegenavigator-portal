@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { handleApiError, createSuccessResponse } from '@/lib/error-handler'
+import { ValidationError, DatabaseError } from '@/lib/errors'
 
 // POST: Antworten speichern
 export async function POST(request: NextRequest) {
@@ -7,11 +9,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { caseId, moduleNumber, moduleName, answers } = body
     
-    if (!caseId || !moduleNumber || !answers) {
-      return NextResponse.json(
-        { error: 'Fehlende Pflichtfelder' },
-        { status: 400 }
-      )
+    if (!caseId) {
+      throw new ValidationError('caseId ist erforderlich')
+    }
+    
+    if (!moduleNumber || moduleNumber < 1 || moduleNumber > 10) {
+      throw new ValidationError('moduleNumber muss zwischen 1 und 10 liegen')
+    }
+    
+    if (!answers || typeof answers !== 'object') {
+      throw new ValidationError('answers ist erforderlich')
     }
     
     const { data, error } = await supabase
@@ -28,51 +35,38 @@ export async function POST(request: NextRequest) {
       .select()
     
     if (error) {
-      console.error('Supabase error:', error)
-      return NextResponse.json(
-        { error: 'Fehler beim Speichern' },
-        { status: 500 }
-      )
+      throw new DatabaseError('Fehler beim Speichern der Antworten', error)
     }
     
-    return NextResponse.json({ success: true, answer: data })
+    return createSuccessResponse({ answer: data })
     
   } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json(
-      { error: 'Interner Serverfehler' },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }
 
 // GET: Antworten für einen Fall laden
 export async function GET(request: NextRequest) {
-  const caseId = request.nextUrl.searchParams.get('caseId')
-  
-  if (!caseId) {
-    return NextResponse.json(
-      { error: 'caseId erforderlich' },
-      { status: 400 }
-    )
-  }
-  
   try {
+    const caseId = request.nextUrl.searchParams.get('caseId')
+    
+    if (!caseId) {
+      throw new ValidationError('caseId ist erforderlich')
+    }
+    
     const { data, error } = await supabase
       .from('answers')
       .select('*')
       .eq('case_id', caseId)
       .order('module_number')
     
-    if (error) throw error
+    if (error) {
+      throw new DatabaseError('Fehler beim Laden der Antworten', error)
+    }
     
-    return NextResponse.json({ success: true, answers: data })
+    return createSuccessResponse({ answers: data })
     
   } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json(
-      { error: 'Interner Serverfehler' },
-      { status: 500 }
-    )
+    return handleApiError(error)
   }
 }
