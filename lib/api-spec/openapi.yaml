@@ -1,0 +1,731 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: PflegeNavigator EU gUG API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: cases
+    description: Case management
+  - name: answers
+    description: Answer management
+  - name: feedback
+    description: Feedback operations
+  - name: scores
+    description: Score/results operations
+  - name: diary
+    description: Care diary operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /cases:
+    post:
+      operationId: createCase
+      tags: [cases]
+      summary: Create a new case with generated case code
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCaseBody"
+      responses:
+        "201":
+          description: Case created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cases/{caseCode}:
+    get:
+      operationId: getCase
+      tags: [cases]
+      summary: Get case by case code
+      parameters:
+        - name: caseCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Case found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+        "404":
+          description: Case not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cases/{caseCode}/answers:
+    post:
+      operationId: saveAnswer
+      tags: [answers]
+      summary: Save or update an answer for a case
+      parameters:
+        - name: caseCode
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveAnswerBody"
+      responses:
+        "200":
+          description: Answer saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Answer"
+        "404":
+          description: Case not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      operationId: getAnswers
+      tags: [answers]
+      summary: Get all answers for a case
+      parameters:
+        - name: caseCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: module
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Answers retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Answer"
+
+  /cases/{caseCode}/scores:
+    get:
+      operationId: getScores
+      tags: [scores]
+      summary: Get computed scores/results for a case
+      parameters:
+        - name: caseCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: module
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scores retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Score"
+    post:
+      operationId: saveScore
+      tags: [scores]
+      summary: Save computed score for a module
+      parameters:
+        - name: caseCode
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveScoreBody"
+      responses:
+        "200":
+          description: Score saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Score"
+
+  /cases/{caseCode}/export:
+    get:
+      operationId: getExportData
+      tags: [cases]
+      summary: Get all data for PDF export
+      parameters:
+        - name: caseCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Export data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportData"
+        "404":
+          description: Case not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /feedback:
+    post:
+      operationId: submitFeedback
+      tags: [feedback]
+      summary: Submit user feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitFeedbackBody"
+      responses:
+        "201":
+          description: Feedback submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feedback"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      operationId: listFeedback
+      tags: [feedback]
+      summary: List all feedback (admin)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: page_path
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [new, reviewed, resolved]
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Feedback list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedbackListResponse"
+
+  /feedback/{id}:
+    patch:
+      operationId: updateFeedbackStatus
+      tags: [feedback]
+      summary: Update feedback status (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFeedbackStatusBody"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feedback"
+
+  /diary:
+    post:
+      operationId: createDiaryEntry
+      tags: [diary]
+      summary: Create a diary entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDiaryEntryBody"
+      responses:
+        "201":
+          description: Diary entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiaryEntry"
+
+  /diary/{caseCode}:
+    get:
+      operationId: getDiaryEntries
+      tags: [diary]
+      summary: Get diary entries for a case
+      parameters:
+        - name: caseCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Diary entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DiaryEntry"
+
+  /stats/overview:
+    get:
+      operationId: getOverviewStats
+      tags: [cases]
+      summary: Get overview statistics (admin)
+      responses:
+        "200":
+          description: Overview statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OverviewStats"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    CreateCaseBody:
+      type: object
+      properties:
+        entryModule:
+          type: string
+          description: Which module the user started with
+      required: []
+
+    Case:
+      type: object
+      properties:
+        id:
+          type: integer
+        caseCode:
+          type: string
+          description: Unique case code in format PF-XXXX-XXXX
+        entryModule:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [active, completed, archived]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - caseCode
+        - status
+        - createdAt
+        - updatedAt
+
+    SaveAnswerBody:
+      type: object
+      properties:
+        module:
+          type: string
+          description: Module name (pflegegrad, widerspruch, gdb, emr, sgb14)
+        questionKey:
+          type: string
+        answerValue:
+          type: string
+        answerJson:
+          type: object
+          nullable: true
+          additionalProperties: true
+      required:
+        - module
+        - questionKey
+        - answerValue
+
+    Answer:
+      type: object
+      properties:
+        id:
+          type: integer
+        caseCode:
+          type: string
+        module:
+          type: string
+        questionKey:
+          type: string
+        answerValue:
+          type: string
+        answerJson:
+          type: object
+          nullable: true
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - caseCode
+        - module
+        - questionKey
+        - answerValue
+        - createdAt
+        - updatedAt
+
+    SaveScoreBody:
+      type: object
+      properties:
+        module:
+          type: string
+        trafficLight:
+          type: string
+          enum: [green, yellow, red]
+        scoreValue:
+          type: number
+          nullable: true
+        resultText:
+          type: string
+          nullable: true
+        recommendedActions:
+          type: array
+          items:
+            type: string
+          nullable: true
+      required:
+        - module
+        - trafficLight
+
+    Score:
+      type: object
+      properties:
+        id:
+          type: integer
+        caseCode:
+          type: string
+        module:
+          type: string
+        trafficLight:
+          type: string
+          enum: [green, yellow, red]
+        scoreValue:
+          type: number
+          nullable: true
+        resultText:
+          type: string
+          nullable: true
+        recommendedActions:
+          type: array
+          items:
+            type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - caseCode
+        - module
+        - trafficLight
+        - createdAt
+        - updatedAt
+
+    ExportData:
+      type: object
+      properties:
+        caseCode:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Answer"
+        scores:
+          type: array
+          items:
+            $ref: "#/components/schemas/Score"
+        diaryEntries:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiaryEntry"
+      required:
+        - caseCode
+        - createdAt
+        - answers
+        - scores
+        - diaryEntries
+
+    SubmitFeedbackBody:
+      type: object
+      properties:
+        pagePath:
+          type: string
+        feedbackText:
+          type: string
+        caseCode:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+      required:
+        - pagePath
+        - feedbackText
+
+    UpdateFeedbackStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [new, reviewed, resolved]
+      required:
+        - status
+
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: integer
+        pagePath:
+          type: string
+        feedbackText:
+          type: string
+        caseCode:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum: [new, reviewed, resolved]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - pagePath
+        - feedbackText
+        - status
+        - createdAt
+
+    FeedbackListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Feedback"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required:
+        - items
+        - total
+        - page
+        - limit
+
+    CreateDiaryEntryBody:
+      type: object
+      properties:
+        caseCode:
+          type: string
+        entryDate:
+          type: string
+          format: date
+        careHours:
+          type: number
+          nullable: true
+        careActivities:
+          type: array
+          items:
+            type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        mobility:
+          type: string
+          enum: [independent, assisted, dependent]
+          nullable: true
+        mood:
+          type: string
+          enum: [good, moderate, poor]
+          nullable: true
+      required:
+        - caseCode
+        - entryDate
+
+    DiaryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        caseCode:
+          type: string
+        entryDate:
+          type: string
+          format: date
+        careHours:
+          type: number
+          nullable: true
+        careActivities:
+          type: array
+          items:
+            type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        mobility:
+          type: string
+          enum: [independent, assisted, dependent]
+          nullable: true
+        mood:
+          type: string
+          enum: [good, moderate, poor]
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - caseCode
+        - entryDate
+        - createdAt
+
+    OverviewStats:
+      type: object
+      properties:
+        totalCases:
+          type: integer
+        activeCases:
+          type: integer
+        completedCases:
+          type: integer
+        totalFeedback:
+          type: integer
+        newFeedback:
+          type: integer
+        moduleBreakdown:
+          type: object
+          additionalProperties:
+            type: integer
+        diaryEntries:
+          type: integer
+      required:
+        - totalCases
+        - activeCases
+        - completedCases
+        - totalFeedback
+        - newFeedback
+        - moduleBreakdown
+        - diaryEntries
