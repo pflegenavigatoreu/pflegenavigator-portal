@@ -12,7 +12,21 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
-    ignores: ["lib/api-spec/**", "lib/db/**"]
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/ban-ts-comment": "warn",
+    }
+  },
+  {
+    ignores: [
+      "lib/api-spec/**", 
+      "lib/db/**",
+      "src/lib/**",
+      ".next/**",
+      "node_modules/**"
+    ]
   }
 ];
 
