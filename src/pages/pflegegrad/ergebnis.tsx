@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "wouter";
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGetScores, useGetExportData } from "@workspace/api-client-react";
+import { useGetScores, useGetExportData } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Download, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { motion } from "framer-motion";
@@ -150,3 +150,4 @@ export function PflegegradErgebnis() {
     </div>
   );
 }
+export default PflegegradErgebnis;

@@ -1,5 +1,5 @@
 import { useCase } from "@/hooks/use-case";
-import { useGetScores } from "@workspace/api-client-react";
+import { useGetScores } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -35,3 +35,4 @@ export function Sgb14Ergebnis() {
     </div>
   );
 }
+export default Sgb14Ergebnis;

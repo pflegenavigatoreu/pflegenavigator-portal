@@ -24,3 +24,4 @@ export function Widerruf() {
     </div>
   );
 }
+export default Widerruf;

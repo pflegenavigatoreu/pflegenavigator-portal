@@ -30,3 +30,4 @@ export function Agb() {
     </div>
   );
 }
+export default Agb;

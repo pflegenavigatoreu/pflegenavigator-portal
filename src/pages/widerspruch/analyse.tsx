@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { useSaveAnswer } from "@workspace/api-client-react";
+import { useSaveAnswer } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export function WiderspruchAnalyse() {
   const { caseCode } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
   const { toast } = useToast();
   const saveAnswer = useSaveAnswer();
   
@@ -40,7 +40,7 @@ export function WiderspruchAnalyse() {
         caseCode,
         data: { module: "widerspruch", questionKey: "ablehnungsgrund", answerValue: ablehnungsgrund }
       });
-      setLocation("/widerspruch/fristen");
+      router.push("/widerspruch/fristen");
     } catch (error) {
       toast({ title: "Fehler beim Speichern", variant: "destructive" });
     } finally {
@@ -79,7 +79,7 @@ export function WiderspruchAnalyse() {
       </Card>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => setLocation("/widerspruch/start")}>
+        <Button variant="outline" onClick={() => router.push("/widerspruch/start")}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Zurück
         </Button>
         <Button onClick={handleNext} disabled={isSubmitting}>
@@ -89,3 +89,4 @@ export function WiderspruchAnalyse() {
     </div>
   );
 }
+export default WiderspruchAnalyse;

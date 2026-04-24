@@ -1,5 +1,5 @@
 import { useCase } from "@/hooks/use-case";
-import { useGetExportData } from "@workspace/api-client-react";
+import { useGetExportData } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Printer } from "lucide-react";
@@ -57,3 +57,4 @@ export function TagebuchExport() {
     </div>
   );
 }
+export default TagebuchExport;

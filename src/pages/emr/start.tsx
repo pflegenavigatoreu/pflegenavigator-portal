@@ -1,16 +1,16 @@
-import { useLocation } from "wouter";
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { ArrowRight } from "lucide-react";
 
 export function EmrStart() {
   const { initializeCase, isInitializing } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
 
   const handleStart = async () => {
     const code = await initializeCase("emr");
     if (code) {
-      setLocation("/emr/arbeit");
+      router.push("/emr/arbeit");
     }
   };
 
@@ -28,3 +28,4 @@ export function EmrStart() {
     </div>
   );
 }
+export default EmrStart;

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { Link, useLocation } from "wouter";
+import { useRouter } from 'next/router'
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,12 +8,12 @@ import { CheckCircle2, ArrowRight } from "lucide-react";
 
 export function PflegegradStart() {
   const { initializeCase, isInitializing } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
 
   const handleStart = async () => {
     const code = await initializeCase("pflegegrad");
     if (code) {
-      setLocation("/pflegegrad/modul1");
+      router.push("/pflegegrad/modul1");
     }
   };
 
@@ -71,3 +72,4 @@ export function PflegegradStart() {
     </div>
   );
 }
+export default PflegegradStart;

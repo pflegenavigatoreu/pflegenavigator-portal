@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,12 +6,12 @@ import { CheckCircle2, ArrowRight } from "lucide-react";
 
 export function WiderspruchStart() {
   const { initializeCase, isInitializing } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
 
   const handleStart = async () => {
     const code = await initializeCase("widerspruch");
     if (code) {
-      setLocation("/widerspruch/analyse");
+      router.push("/widerspruch/analyse");
     }
   };
 
@@ -65,3 +65,4 @@ export function WiderspruchStart() {
     </div>
   );
 }
+export default WiderspruchStart;

@@ -39,3 +39,4 @@ export function Barrierefreiheit() {
     </div>
   );
 }
+export default Barrierefreiheit;

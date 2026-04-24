@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, Printer } from "lucide-react";
 import { useCase } from "@/hooks/use-case";
-import { useGetAnswers } from "@workspace/api-client-react";
+import { useGetAnswers } from "@/lib/api";
 
 export function WiderspruchPdf() {
   const { caseCode } = useCase();
@@ -55,3 +55,4 @@ export function WiderspruchPdf() {
     </div>
   );
 }
+export default WiderspruchPdf;

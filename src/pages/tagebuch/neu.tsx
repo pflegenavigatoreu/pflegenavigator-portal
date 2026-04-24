@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { useCreateDiaryEntry } from "@workspace/api-client-react";
+import { useCreateDiaryEntry } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 const activities = ["Körperpflege", "Ernährung", "Mobilität", "Hauswirtschaft", "Soziale Betreuung", "Medizinische Versorgung"];
 
 export function TagebuchNeu() {
   const { caseCode, initializeCase } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
   const { toast } = useToast();
   const createEntry = useCreateDiaryEntry();
 
@@ -52,7 +52,7 @@ export function TagebuchNeu() {
         }
       });
       toast({ title: "Eintrag gespeichert!" });
-      setLocation("/tagebuch/uebersicht");
+      router.push("/tagebuch/uebersicht");
     } catch (e) {
       toast({ title: "Fehler", variant: "destructive" });
     }
@@ -118,7 +118,7 @@ export function TagebuchNeu() {
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button variant="outline" type="button" onClick={() => setLocation("/tagebuch/uebersicht")}>Abbrechen</Button>
+              <Button variant="outline" type="button" onClick={() => router.push("/tagebuch/uebersicht")}>Abbrechen</Button>
               <Button type="submit" disabled={createEntry.isPending}>Speichern</Button>
             </div>
           </form>
@@ -127,3 +127,4 @@ export function TagebuchNeu() {
     </div>
   );
 }
+export default TagebuchNeu;

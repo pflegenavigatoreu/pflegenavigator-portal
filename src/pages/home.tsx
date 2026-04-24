@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, FileText, ArrowRight, HeartHandshake } from "lucide-react";
@@ -119,3 +119,4 @@ export function Home() {
     </div>
   );
 }
+export default Home;

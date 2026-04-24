@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { useSaveAnswer } from "@workspace/api-client-react";
+import { useSaveAnswer } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -55,7 +55,7 @@ const questions = [
 
 export function PflegegradModul3() {
   const { caseCode } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
   const { toast } = useToast();
   const saveAnswer = useSaveAnswer();
   
@@ -91,7 +91,7 @@ export function PflegegradModul3() {
           }
         });
       }
-      setLocation("/pflegegrad/modul4");
+      router.push("/pflegegrad/modul4");
     } catch (error) {
       toast({
         title: "Fehler beim Speichern",
@@ -140,7 +140,7 @@ export function PflegegradModul3() {
         </div>
 
         <div className="flex justify-between items-center pt-4 border-t border-border">
-          <Button variant="outline" onClick={() => setLocation("/pflegegrad/modul2")}>
+          <Button variant="outline" onClick={() => router.push("/pflegegrad/modul2")}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Zurück
           </Button>
           <Button onClick={handleNext} disabled={isSubmitting}>
@@ -152,3 +152,4 @@ export function PflegegradModul3() {
     </div>
   );
 }
+export default PflegegradModul3;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useCreateCase } from "@workspace/api-client-react";
+import { useCreateCase } from "@/lib/api";
 
 const STORAGE_KEY = "pflegenavigator_case_code";
 

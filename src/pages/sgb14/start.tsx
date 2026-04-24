@@ -1,16 +1,16 @@
-import { useLocation } from "wouter";
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { ArrowRight } from "lucide-react";
 
 export function Sgb14Start() {
   const { initializeCase, isInitializing } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
 
   const handleStart = async () => {
     const code = await initializeCase("sgb14");
     if (code) {
-      setLocation("/sgb14/tat");
+      router.push("/sgb14/tat");
     }
   };
 
@@ -28,3 +28,4 @@ export function Sgb14Start() {
     </div>
   );
 }
+export default Sgb14Start;

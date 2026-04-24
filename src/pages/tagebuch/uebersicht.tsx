@@ -1,8 +1,8 @@
-import { Link } from "wouter";
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { Card, CardContent } from "@/components/ui/card";
-import { useGetDiaryEntries } from "@workspace/api-client-react";
+import { useGetDiaryEntries } from "@/lib/api";
 import { Plus, Download, Calendar } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -81,3 +81,4 @@ export function TagebuchUebersicht() {
     </div>
   );
 }
+export default TagebuchUebersicht;

@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useRouter } from 'next/router'
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { Card, CardContent } from "@/components/ui/card";
-import { useGetAnswers } from "@workspace/api-client-react";
+import { useGetAnswers } from "@/lib/api";
 import { ArrowLeft, FileText, AlertTriangle } from "lucide-react";
 import { addMonths, format, parseISO } from "date-fns";
 
 export function WiderspruchFristen() {
   const { caseCode } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
   const [frist, setFrist] = useState<string | null>(null);
 
   const { data: answers, isLoading } = useGetAnswers(caseCode || "", { module: "widerspruch" }, {
@@ -66,10 +67,10 @@ export function WiderspruchFristen() {
           </Card>
 
           <div className="flex justify-between">
-            <Button variant="outline" onClick={() => setLocation("/widerspruch/analyse")}>
+            <Button variant="outline" onClick={() => router.push("/widerspruch/analyse")}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Zurück
             </Button>
-            <Button onClick={() => setLocation("/widerspruch/pdf")}>
+            <Button onClick={() => router.push("/widerspruch/pdf")}>
               <FileText className="mr-2 h-4 w-4" /> Dokumente generieren
             </Button>
           </div>
@@ -78,3 +79,4 @@ export function WiderspruchFristen() {
     </div>
   );
 }
+export default WiderspruchFristen;

@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { useSaveAnswer, useSaveScore } from "@workspace/api-client-react";
+import { useSaveAnswer, useSaveScore } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight } from "lucide-react";
 
 export function GdbDiagnosen() {
   const { caseCode } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
   const { toast } = useToast();
   const saveAnswer = useSaveAnswer();
   const saveScore = useSaveScore();
@@ -40,7 +40,7 @@ export function GdbDiagnosen() {
         }
       });
       
-      setLocation("/gdb/ergebnis");
+      router.push("/gdb/ergebnis");
     } catch (error) {
       toast({ title: "Fehler", variant: "destructive" });
     } finally {
@@ -73,3 +73,4 @@ export function GdbDiagnosen() {
     </div>
   );
 }
+export default GdbDiagnosen;

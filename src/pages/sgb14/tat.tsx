@@ -1,16 +1,16 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { useSaveAnswer, useSaveScore } from "@workspace/api-client-react";
+import { useSaveAnswer, useSaveScore } from "@/lib/api";
 import { ArrowRight } from "lucide-react";
 
 export function Sgb14Tat() {
   const { caseCode } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
   const saveAnswer = useSaveAnswer();
   const saveScore = useSaveScore();
   
@@ -39,7 +39,7 @@ export function Sgb14Tat() {
       }
     });
     
-    setLocation("/sgb14/ergebnis");
+    router.push("/sgb14/ergebnis");
   };
 
   return (
@@ -63,3 +63,4 @@ export function Sgb14Tat() {
     </div>
   );
 }
+export default Sgb14Tat;

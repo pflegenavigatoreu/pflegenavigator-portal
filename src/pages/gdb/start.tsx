@@ -1,16 +1,16 @@
-import { useLocation } from "wouter";
+import { useRouter } from 'next/router';
 import { Button } from "@/components/ui/button";
 import { useCase } from "@/hooks/use-case";
 import { ArrowRight } from "lucide-react";
 
 export function GdbStart() {
   const { initializeCase, isInitializing } = useCase();
-  const [, setLocation] = useLocation();
+  const router = useRouter();
 
   const handleStart = async () => {
     const code = await initializeCase("gdb");
     if (code) {
-      setLocation("/gdb/diagnosen");
+      router.push("/gdb/diagnosen");
     }
   };
 
@@ -33,3 +33,4 @@ export function GdbStart() {
     </div>
   );
 }
+export default GdbStart;

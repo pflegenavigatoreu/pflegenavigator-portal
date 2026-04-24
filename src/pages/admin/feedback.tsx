@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListFeedback, useGetOverviewStats, useUpdateFeedbackStatus } from "@workspace/api-client-react";
+import { useListFeedback, useGetOverviewStats, useUpdateFeedbackStatus } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -126,3 +126,4 @@ export function AdminFeedback() {
     </div>
   );
 }
+export default AdminFeedback;
