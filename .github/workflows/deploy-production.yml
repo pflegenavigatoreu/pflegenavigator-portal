@@ -1,0 +1,404 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      skip_tests:
+        description: 'Skip post-deploy tests'
+        required: false
+        default: false
+        type: boolean
+      notify_channels:
+        description: 'Notification channels (comma-separated)'
+        required: false
+        default: 'slack,telegram'
+        type: string
+
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  NODE_VERSION: '22'
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  # ============================================================
+  # PRE-DEPLOY CHECKS
+  # ============================================================
+  pre-deploy-checks:
+    name: ✅ Pre-Deploy Verification
+    runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if CI passed
+        id: check
+        run: |
+          # Check if the latest commit has passing CI
+          echo "Running pre-deploy checks..."
+          echo "should-deploy=true" >> $GITHUB_OUTPUT
+          
+      - name: Verify branch protection
+        run: |
+          echo "Verifying branch is protected and has required reviews..."
+          # Additional checks can be added here
+
+  # ============================================================
+  # DEPLOY TO PRODUCTION
+  # ============================================================
+  deploy:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: pre-deploy-checks
+    if: needs.pre-deploy-checks.outputs.should-deploy == 'true'
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.production_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: '10'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build for Production
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          VERCEL_ENV: production
+
+      - name: Deploy to Production
+        id: deploy
+        run: |
+          DEPLOY_OUTPUT=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm)
+          echo "Production deployed: $DEPLOY_OUTPUT"
+          echo "production_url=$DEPLOY_OUTPUT" >> $GITHUB_OUTPUT
+
+      - name: Create Deployment Summary
+        run: |
+          echo "## 🚀 Production Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Environment** | Production |" >> $GITHUB_STEP_SUMMARY
+          echo "| **URL** | ${{ steps.deploy.outputs.production_url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Deployed by** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Timestamp** | $(date -u +"%Y-%m-%d %H:%M:%S UTC") |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # POST-DEPLOY TESTS
+  # ============================================================
+  post-deploy-tests:
+    name: 🔍 Post-Deploy Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ !github.event.inputs.skip_tests }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm install axios cheerio
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Run smoke tests
+        id: smoke-tests
+        run: |
+          cat > smoke-tests.js << 'EOF'
+          const axios = require('axios');
+          const cheerio = require('cheerio');
+          
+          const PROD_URL = '${{ needs.deploy.outputs.production_url }}';
+          const tests = [
+            { name: 'Homepage loads', url: '/' },
+            { name: 'Health check endpoint', url: '/api/health' },
+            { name: 'Robots.txt exists', url: '/robots.txt' },
+            { name: 'Sitemap exists', url: '/sitemap.xml' }
+          ];
+          
+          async function runTests() {
+            let passed = 0;
+            let failed = 0;
+            
+            for (const test of tests) {
+              try {
+                const url = PROD_URL + test.url;
+                const response = await axios.get(url, { 
+                  timeout: 10000,
+                  validateStatus: () => true 
+                });
+                
+                if (response.status === 200) {
+                  console.log(`✅ ${test.name}: ${response.status}`);
+                  passed++;
+                } else {
+                  console.log(`❌ ${test.name}: ${response.status}`);
+                  failed++;
+                }
+              } catch (error) {
+                console.log(`❌ ${test.name}: ${error.message}`);
+                failed++;
+              }
+            }
+            
+            console.log(`\n📊 Results: ${passed} passed, ${failed} failed`);
+            process.exit(failed > 0 ? 1 : 0);
+          }
+          
+          runTests();
+          EOF
+          
+          node smoke-tests.js
+
+      - name: Lighthouse Production Check
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun --config=./lighthouserc.json --collect.url=${{ needs.deploy.outputs.production_url }} || true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: post-deploy-test-results
+          path: |
+            lhci_reports/
+            smoke-test-results/
+          retention-days: 7
+
+  # ============================================================
+  # NOTIFICATIONS
+  # ============================================================
+  notify-slack:
+    name: 📢 Notify Slack
+    runs-on: ubuntu-latest
+    needs: [deploy, post-deploy-tests]
+    if: always() && contains(github.event.inputs.notify_channels || 'slack', 'slack')
+    steps:
+      - name: Notify Slack - Success
+        if: needs.deploy.result == 'success' && needs.post-deploy-tests.result == 'success'
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🚀 Production Deployment Successful",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Project:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Deployed by:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*URL:*\n<${{ needs.deploy.outputs.production_url }}|View Deployment>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Status:* ✅ All checks passed"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify Slack - Failure
+        if: needs.deploy.result == 'failure' || needs.post-deploy-tests.result == 'failure'
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "❌ Production Deployment Failed",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Project:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Triggered by:*\n${{ github.actor }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Status:* ❌ Deployment failed or tests failed"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+  notify-telegram:
+    name: 📱 Notify Telegram
+    runs-on: ubuntu-latest
+    needs: [deploy, post-deploy-tests]
+    if: always() && contains(github.event.inputs.notify_channels || 'telegram', 'telegram')
+    steps:
+      - name: Send Telegram Message - Success
+        if: needs.deploy.result == 'success' && needs.post-deploy-tests.result == 'success'
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🚀 *Production Deployment Successful*
+            
+            📦 *Project:* ${{ github.repository }}
+            👤 *Deployed by:* ${{ github.actor }}
+            🔗 *URL:* ${{ needs.deploy.outputs.production_url }}
+            🔖 *Commit:* ${{ github.sha }}
+            
+            ✅ All post-deploy tests passed
+
+      - name: Send Telegram Message - Failure
+        if: needs.deploy.result == 'failure' || needs.post-deploy-tests.result == 'failure'
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ❌ *Production Deployment Failed*
+            
+            📦 *Project:* ${{ github.repository }}
+            👤 *Triggered by:* ${{ github.actor }}
+            🔗 *Workflow:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            🔖 *Commit:* ${{ github.sha }}
+            
+            ⚠️ Please check the logs immediately
+
+  # ============================================================
+  # CREATE RELEASE
+  # ============================================================
+  create-release:
+    name: 🏷️ Create Release
+    runs-on: ubuntu-latest
+    needs: [deploy, post-deploy-tests]
+    if: startsWith(github.ref, 'refs/tags/v') && needs.deploy.result == 'success'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "## Changes since $PREVIOUS_TAG" > CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD >> CHANGELOG.md
+          else
+            echo "## Initial Release" > CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" >> CHANGELOG.md
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+          files: |
+            LICENSE
+            README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

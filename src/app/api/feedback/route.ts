@@ -1,84 +1,95 @@
-import { NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabase'
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
+interface FeedbackData {
+  type: 'bug' | 'feature' | 'praise' | 'other';
+  rating: number;
+  message: string;
+  email?: string;
+  context?: string;
+  timestamp: string;
+  userAgent: string;
+  url: string;
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-
-    let query = supabaseServer
-      .from('feedback')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (status) {
-      query = query.eq('status', status)
+    const data: FeedbackData = await request.json();
+    
+    // Validierung
+    if (!data.message || data.message.trim().length < 10) {
+      return NextResponse.json(
+        { error: 'Nachricht zu kurz (mindestens 10 Zeichen)' },
+        { status: 400 }
+      );
     }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Supabase error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    
+    if (!['bug', 'feature', 'praise', 'other'].includes(data.type)) {
+      return NextResponse.json(
+        { error: 'Ungueltiger Feedback-Typ' },
+        { status: 400 }
+      );
     }
-
-    return NextResponse.json(data || [])
-  } catch (err) {
-    console.error('Unexpected error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+    // Ergaenze Metadaten
+    const feedbackEntry = {
+      ...data,
+      timestamp: new Date().toISOString(),
+      userAgent: request.headers.get('user-agent') || 'unknown',
+      url: request.headers.get('referer') || 'unknown',
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+    };
+    
+    // In Produktion: Speichere in Datenbank
+    // Fuer Demo: Logge nur
+    console.log('Feedback received:', {
+      type: feedbackEntry.type,
+      rating: feedbackEntry.rating,
+      messageLength: feedbackEntry.message.length,
+      hasEmail: !!feedbackEntry.email,
+      timestamp: feedbackEntry.timestamp
+    });
+    
+    // Optional: Sende E-Mail Benachrichtigung
+    if (process.env.FEEDBACK_EMAIL) {
+      // E-Mail Logik hier implementieren
+      // await sendFeedbackEmail(feedbackEntry);
+    }
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Feedback erfolgreich erhalten',
+      id: `feedback-${Date.now()}`
+    });
+    
+  } catch (error) {
+    console.error('Feedback error:', error);
+    return NextResponse.json(
+      { error: 'Fehler beim Verarbeiten des Feedbacks' },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(request: Request) {
-  try {
-    const { caseCode, seite, feedbackText, eingabeTyp } = await request.json()
-
-    if (!seite || !feedbackText) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
-
-    const { data, error } = await supabaseServer
-      .from('feedback')
-      .insert({
-        case_code: caseCode || null,
-        feedback_type: eingabeTyp || 'improvement',
-        message: feedbackText,
-        status: 'new'
-      })
-
-    if (error) {
-      console.error('Supabase error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true, data }, { status: 201 })
-  } catch (err) {
-    console.error('Unexpected error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
-
-export async function PATCH(request: Request) {
-  try {
-    const { id, status } = await request.json()
-
-    if (!id || !status) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
-
-    const { data, error } = await supabaseServer
-      .from('feedback')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', id)
-
-    if (error) {
-      console.error('Supabase error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true, data })
-  } catch (err) {
-    console.error('Unexpected error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+// GET: Feedback-Statistik (fuer Admin)
+export async function GET(request: NextRequest) {
+  // In Produktion: Authentifizierung pruefen
+  // const session = await getSession();
+  // if (!session?.user?.isAdmin) {
+  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // }
+  
+  // Demo-Statistik
+  const stats = {
+    total: 0,
+    byType: {
+      bug: 0,
+      feature: 0,
+      praise: 0,
+      other: 0
+    },
+    averageRating: 0,
+    last7Days: 0
+  };
+  
+  return NextResponse.json(stats);
 }

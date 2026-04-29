@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=PflegeNavigator Portal
+Comment=Startet das PflegeNavigator Portal
+Exec=bash -c "cd /data/.openclaw/workspace && npm run dev & sleep 5 && chromium http://localhost:3000"
+Type=Application
+Terminal=true
+Icon=web-browser
+Categories=Development;

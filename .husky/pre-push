@@ -1,0 +1,21 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Pre-push Hook
+# Dieser Hook wird vor jedem Push ausgeführt
+
+echo "🚀 Running pre-push checks..."
+
+# Prüfe ob alle lokalen CI Checks bestanden haben
+if [ -f "./scripts/ci-checks.sh" ]; then
+    echo "📋 Running full CI checks..."
+    ./scripts/ci-checks.sh --skip-branch --quick || {
+        echo "❌ CI checks failed! Fix errors before pushing."
+        echo "Run './scripts/ci-checks.sh --fix' to auto-fix some issues."
+        exit 1
+    }
+else
+    echo "⚠️  CI checks script not found. Skipping..."
+fi
+
+echo "✅ Pre-push checks passed!"

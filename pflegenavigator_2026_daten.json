@@ -1,0 +1,241 @@
+{
+  "meta": {
+    "titel": "PflegeNavigator Leistungsbeträge 2026",
+    "gueltig_ab": "2026-01-01",
+    "quellen": [
+      "Bundesministerium für Gesundheit (BMG)",
+      "Deutsche Rentenversicherung (DRV)",
+      "SGB XI, SGB XIV, EStG",
+      "Pflege.de, PflegeBetreuer, Betanet"
+    ],
+    "letzte_aktualisierung": "2026-04-27"
+  },
+  "pflegegeld_sgb_xi": {
+    "titel": "Pflegegeld nach § 37 SGB XI",
+    "gueltigkeit": "Seit 01.01.2025, unverändert 2026",
+    "naeeste_anpassung": "01.01.2028 (dynamische Anpassung geplant)",
+    "betraege_monatlich": {
+      "pflegegrad_1": {
+        "betrag_euro": 0,
+        "hinweis": "Kein Anspruch auf Pflegegeld"
+      },
+      "pflegegrad_2": {
+        "betrag_euro": 347
+      },
+      "pflegegrad_3": {
+        "betrag_euro": 599
+      },
+      "pflegegrad_4": {
+        "betrag_euro": 800
+      },
+      "pflegegrad_5": {
+        "betrag_euro": 990
+      }
+    },
+    "voraussetzungen": [
+      "Pflegeversicherung (gesetzlich oder privat)",
+      "Mindestens Pflegegrad 2",
+      "Häusliche Pflege durch Angehörige/Freunde/Ehrenamtliche"
+    ],
+    "beratungspflicht": {
+      "pflegegrad_2_3": "Einmal pro Halbjahr",
+      "pflegegrad_4_5": "Einmal pro Vierteljahr"
+    },
+    "auszahlung": "Am ersten Werktag des Monats im Voraus"
+  },
+  "pflegesachleistungen_sgb_xi": {
+    "titel": "Pflegesachleistungen nach § 36 SGB XI",
+    "gueltigkeit": "Seit 01.01.2025, unverändert 2026",
+    "betraege_monatlich": {
+      "pflegegrad_1": 0,
+      "pflegegrad_2": 796,
+      "pflegegrad_3": 1497,
+      "pflegegrad_4": 1859,
+      "pflegegrad_5": 2299
+    }
+  },
+  "entlastungsbetrag_sgb_xi": {
+    "titel": "Entlastungsbetrag nach § 45b SGB XI",
+    "gueltigkeit": "Seit 01.01.2025, unverändert 2026",
+    "betrag_monatlich_euro": 131,
+    "historie": {
+      "2024": 125,
+      "2025_2026": 131
+    },
+    "anspruch": "Pflegegrad 1 bis 5 (häusliche Pflege)",
+    "verwendung": [
+      "Tages- und Nachtpflege (Eigenanteile)",
+      "Kurzzeitpflege (Eigenanteile)",
+      "Ambulante Pflegedienste (nicht Grundpflege)",
+      "Angebote zur Unterstützung im Alltag"
+    ]
+  },
+  "pflegeunterstuetzungsgeld_sgb_xi": {
+    "titel": "Pflegeunterstützungsgeld nach § 44a SGB XI",
+    "gueltigkeit": "Seit 01.01.2024 (10 Tage/Jahr seit 01.01.2024)",
+    "hoehe": {
+      "prozent_netto": 90,
+      "max_betrag_tag_euro": 135.63,
+      "bemessungsgrundlage": "70% der Beitragsbemessungsgrenze (2026: ca. 135,63 Euro/Tag)"
+    },
+    "tage_pro_jahr": 10,
+    "voraussetzungen": [
+      "Akute Pflegesituation",
+      "Kurzfristige Arbeitsverhinderung zur Pflegeorganisation",
+      "Kein Pflegegrad zwingend erforderlich (wenn Pflegebedürftigkeit absehbar)"
+    ],
+    "wichtig": "Maximal 10 Arbeitstage pro Kalenderjahr und pro pflegebedürftiger Person"
+  },
+  "verhinderungs_kurzzeitpflege": {
+    "titel": "Verhinderungs- und Kurzzeitpflege (Gemeinsames Budget)",
+    "gueltigkeit": "Seit 01.07.2025",
+    "jahresbudget_euro": 3539,
+    "dauer_max": "Bis zu 8 Wochen pro Kalenderjahr (Verhinderungs- oder Kurzzeitpflege)",
+    "vorpflegezeit": "Entfällt seit 01.07.2025 (keine 6 Monate mehr erforderlich)"
+  },
+  "pflegehilfsmittel": {
+    "titel": "Pflegehilfsmittel zum Verbrauch",
+    "betrag_monatlich_euro": 42,
+    "gueltigkeit": "Seit 01.01.2025"
+  },
+  "wohnumfeldverbessernde_massnahmen": {
+    "titel": "Wohnumfeldverbessernde Maßnahmen",
+    "betrag_pro_massnahme_euro": 4180,
+    "gueltigkeit": "Seit 01.01.2025",
+    "anspruch": "Pflegegrad 1 bis 5"
+  },
+  "digitale_pflegeanwendungen": {
+    "titel": "Digitale Pflegeanwendungen (DiPA)",
+    "betrag_monatlich_euro": 53,
+    "zusaetzlich_fuer_unterstuetzung_euro": 53
+  },
+  "tages_nachtpflege": {
+    "titel": "Tages- und Nachtpflege (Teilstationär)",
+    "betraege_monatlich": {
+      "pflegegrad_1": "Kein Anspruch (nur Entlastungsbetrag nutzbar)",
+      "pflegegrad_2": 721,
+      "pflegegrad_3": 1357,
+      "pflegegrad_4": 1685,
+      "pflegegrad_5": 2085
+    },
+    "hinweis": "Wird zusätzlich zu Pflegegeld oder Pflegesachleistungen gewährt"
+  },
+  "vollstationaere_pflege": {
+    "titel": "Vollstationäre Pflege (Zuschlag zum Eigenanteil)",
+    "betraege_monatlich": {
+      "pflegegrad_1": "Kein Anspruch (nur Entlastungsbetrag 131€)",
+      "pflegegrad_2": 805,
+      "pflegegrad_3": 1319,
+      "pflegegrad_4": 1855,
+      "pflegegrad_5": 2096
+    },
+    "zuschlag_eigenanteil": {
+      "jahr_1": "15% Zuschuss",
+      "jahr_2": "30% Zuschuss",
+      "jahr_3": "50% Zuschuss",
+      "ab_jahr_4": "75% Zuschuss"
+    }
+  },
+  "behindertenpauschbetrag": {
+    "titel": "Behinderten-Pauschbetrag (nach § 33b EStG)",
+    "gueltigkeit": "Seit Steuerjahr 2021 (verdoppelt)",
+    "ab_2026": "Elektronische Übermittlung durch Versorgungsamt an Finanzamt",
+    "tabelle": {
+      "gdb_20": 384,
+      "gdb_30": 620,
+      "gdb_40": 860,
+      "gdb_50": 1140,
+      "gdb_60": 1440,
+      "gdb_70": 1780,
+      "gdb_80": 2120,
+      "gdb_90": 2460,
+      "gdb_100": 2840,
+      "merkzeichen_h_bl_tbl": 7400
+    },
+    "merkzeichen_hinweis": "Merkzeichen H, Bl oder TBl unabhängig vom GdB: 7.400€",
+    "nachweis_ab_2026": "Elektronisch durch Versorgungsamt (kein Einreichen mehr erforderlich)"
+  },
+  "erwerbsminderungsrente": {
+    "titel": "Erwerbsminderungsrente (EM-Rente)",
+    "arten": {
+      "volle_erwerbsminderung": {
+        "definition": "Weniger als 3 Stunden täglich arbeitsfähig",
+        "hinzuverdienstgrenze_2026_euro": 20763.75
+      },
+      "teilweise_erwerbsminderung": {
+        "definition": "3-6 Stunden täglich arbeitsfähig",
+        "hinzuverdienstgrenze_2026_euro": 41527.50
+      }
+    },
+    "wartezeiten": {
+      "allgemein": {
+        "versicherungszeit": "Mindestens 5 Jahre",
+        "pflichtbeitraege": "Mindestens 3 Jahre in letzten 5 Jahren"
+      },
+      "ausnahmen": [
+        "Arbeitsunfall (1 Beitrag ausreichend)",
+        "Berufskrankheit (1 Beitrag ausreichend)",
+        "Wehrdienst-/Zivildienstbeschädigung (1 Beitrag ausreichend)",
+        "Politische Haft (1 Beitrag ausreichend)"
+      ]
+    },
+    "antrag": {
+      "wo": "Deutsche Rentenversicherung",
+      "empfohlen": "Reha vor Rente (Reha prüft zuerst)"
+    }
+  },
+  "sgb_xiv_opferentschaedigung": {
+    "titel": "Soziale Entschädigung nach SGB XIV",
+    "gueltigkeit": "Seit 01.01.2024 (modernisiert)",
+    "leistungsarten": [
+      {
+        "name": "Krankengeld der Sozialen Entschädigung",
+        "hoehe": "80% des Regelentgelts (max. entgangenes Netto)"
+      },
+      {
+        "name": "Entschädigungsrente (Unfallrente)",
+        "hoehe": "Jährliche Rentenbemessung, gestaffelt nach Invaliditätsgrad"
+      },
+      {
+        "name": "Pflegegeld",
+        "hoehe": "Analog SGB XI"
+      },
+      {
+        "name": "Heilbehandlung und Rehabilitation"
+      }
+    ],
+    "fristen": {
+      "antragstellung": "Innerhalb 3 Jahre nach Kenntnis der Verletzung",
+      "anerkennung_ohne_urteil": "Möglich"
+    },
+    "anpassung_2026": "Anhebung um 3,74% (per Verordnung)"
+  },
+  "pflegekurse_sgb_xi": {
+    "titel": "Pflegekurse nach § 45 SGB XI",
+    "foerderung": "Kosten werden komplett von Pflegekasse getragen",
+    "hinweis": "Zusätzlich zu Pflegegeld, Entlastungsbetrag und Verhinderungspflege",
+    "zielgruppe": [
+      "Angehörige",
+      "Ehrenamtliche Pflegepersonen",
+      "Pflegebedürftige"
+    ],
+    "anbieter": [
+      "Private Pflegeanbieter mit Rahmenvertrag",
+      "Pflegekassen (verschiedene Partner)",
+      "Online-Anbieter (z.B. PflegeBetreuer)"
+    ],
+    "foerderung_selbsthilfe": {
+      "regelung": "§ 45d SGB XI",
+      "budget_2026": "0,15 Euro je Versichertem im Kalenderjahr"
+    }
+  },
+  "quellen_verweise": {
+    "bmg": "https://www.bundesgesundheitsministerium.de",
+    "drv": "https://www.deutsche-rentenversicherung.de",
+    "sgb_xi": "https://www.gesetze-im-internet.de/sgb_11/",
+    "sgb_xiv": "https://www.gesetze-im-internet.de/sgb_14/",
+    "betanet": "https://www.betanet.de",
+    "pflegede": "https://www.pflege.de",
+    "pflegebetreuer": "https://www.pflege-betreuer.de"
+  }
+}

@@ -30,16 +30,39 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+    VariantProps<typeof buttonVariants> {
+  /** Aria-Label für Accessibility (besonders wichtig für Icon-Buttons) */
+  'aria-label'?: string
+}
 
+/**
+ * Button Komponente mit Radix UI Styling
+ * 
+ * Accessibility:
+ * - Verwendet focus-visible für Tastatur-Navigation
+ * - Unterstützt aria-label für Screenreader
+ * - Disabled-Zustand mit korrekter Semantik
+ * 
+ * @example
+ * ```tsx
+ * <Button>Click me</Button>
+ * <Button aria-label="Menü öffnen" size="icon"><Menu /></Button>
+ * ```
+ */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
+  ({ className, variant, size, 'aria-label': ariaLabel, children, ...props }, ref) => {
+    // Auto-generiere aria-label für Icon-Buttons
+    const computedAriaLabel = ariaLabel || (size === 'icon' && typeof children === 'object' ? 'Button' : undefined)
+    
     return (
       <button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        aria-label={computedAriaLabel}
         {...props}
-      />
+      >
+        {children}
+      </button>
     )
   }
 )

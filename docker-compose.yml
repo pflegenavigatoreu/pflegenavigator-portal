@@ -1,0 +1,144 @@
+version: '3.8'
+
+# ============================================
+# PFLEGENAVIGATOR EU - KOMPLETTES DOCKER SETUP
+# Höchste Datenschutz-Standards + Vollständige Funktionalität
+# ============================================
+
+services:
+  # ============================================
+  # 1. HAUPTPORTAL
+  # ============================================
+  portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pflegenavigator-portal
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    restart: unless-stopped
+    networks:
+      - pflegenavigator-network
+
+  # ============================================
+  # 2. ANALYTICS - Umami (Self-Hosted, FREE)
+  # ============================================
+  umami:
+    image: docker.umami.is/umami-software/umami:postgresql-latest
+    container_name: pflegenavigator-umami
+    ports:
+      - "8001:3000"
+    environment:
+      - DATABASE_URL=postgresql://umami:umami@umami-db:5432/umami
+      - DATABASE_TYPE=postgresql
+      - APP_SECRET=${UMAMI_SECRET}
+    depends_on:
+      - umami-db
+    restart: unless-stopped
+    networks:
+      - pflegenavigator-network
+
+  umami-db:
+    image: postgres:15-alpine
+    container_name: pflegenavigator-umami-db
+    volumes:
+      - umami-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=umami
+      - POSTGRES_USER=umami
+      - POSTGRES_PASSWORD=umami
+    restart: unless-stopped
+    networks:
+      - pflegenavigator-network
+
+  # ============================================
+  # 3. MONITORING - Uptime Kuma (Self-Hosted)
+  # ============================================
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: pflegenavigator-uptime
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime-kuma:/app/data
+    restart: unless-stopped
+    networks:
+      - pflegenavigator-network
+
+  # ============================================
+  # 4. ERROR TRACKING - GlitchTip (Open Source, FREE)
+  # ============================================
+  glitchtip:
+    image: glitchtip/glitchtip:latest
+    container_name: pflegenavigator-glitchtip
+    ports:
+      - "8002:8080"
+    environment:
+      - DATABASE_URL=postgresql://glitchtip:glitchtip@glitchtip-db:5432/glitchtip
+      - SECRET_KEY=${GLITCHTIP_SECRET}
+      - PORT=8080
+    depends_on:
+      - glitchtip-db
+    restart: unless-stopped
+    networks:
+      - pflegenavigator-network
+
+  glitchtip-db:
+    image: postgres:15-alpine
+    container_name: pflegenavigator-glitchtip-db
+    volumes:
+      - glitchtip-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=glitchtip
+      - POSTGRES_USER=glitchtip
+      - POSTGRES_PASSWORD=glitchtip
+    restart: unless-stopped
+    networks:
+      - pflegenavigator-network
+
+  # ============================================
+  # 5. ÜBERSETZUNG - LibreTranslate (35 Sprachen)
+  # ============================================
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    container_name: pflegenavigator-translate
+    ports:
+      - "5000:5000"
+    volumes:
+      - libretranslate-data:/home/libretranslate/.local
+    restart: unless-stopped
+    networks:
+      - pflegenavigator-network
+    # Startet mit langsamerer CPU aber funktioniert auf Hetzner CX11
+    command: ["--host", "0.0.0.0", "--disable-web-ui"]
+
+  # ============================================
+  # 6. BACKUP - Restic (Verschlüsselt)
+  # ============================================
+  # Wird separat per Cron aufgerufen, läuft nicht dauerhaft
+
+networks:
+  pflegenavigator-network:
+    driver: bridge
+
+volumes:
+  umami-data:
+  uptime-kuma:
+  glitchtip-data:
+  libretranslate-data:
+
+# ============================================
+# STARTEN MIT:
+# docker-compose up -d
+#
+# STATUS CHECK:
+# docker-compose ps
+#
+# LOGS ANSEHEN:
+# docker-compose logs -f portal
+# ============================================

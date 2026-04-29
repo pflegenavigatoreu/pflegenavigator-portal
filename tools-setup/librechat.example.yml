@@ -1,0 +1,61 @@
+# LibreChat Konfiguration
+# Speichere als librechat-config/librechat.yml
+
+version: 1.1.6
+
+cache: true
+
+# UI Einstellungen
+interface:
+  # Zusätzliche Modelle die nicht in der Liste sind
+  custom:
+    # Beispiel für Ollama Modelle
+    - name: "Ollama-Local"
+      label: "Ollama Local (llama3.2)"
+      description: "Lokales llama3.2 Modell via Ollama"
+      config:
+        model: "llama3.2"
+        maxContextTokens: 4096
+
+# Endpoints Konfiguration
+endpoints:
+  # Ollama (Lokale Modelle)
+  ollama:
+    baseURL: "http://host.docker.internal:11434"
+    models:
+      default:
+        - "llama3.2"
+        - "mistral"
+        - "codellama"
+      fetch: true
+    titleConvo: true
+    titleModel: "llama3.2"
+    summarize: false
+    summaryModel: "llama3.2"
+    forcePrompt: false
+    modelDisplayLabel: "Ollama"
+
+  # OpenAI (optional - erfordert API Key)
+  # openAI:
+  #   apiKey: "${OPENAI_API_KEY}"
+  #   models:
+  #     default: ["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"]
+  #     fetch: true
+
+  # Anthropic (optional - erfordert API Key)
+  # anthropic:
+  #   apiKey: "${ANTHROPIC_API_KEY}"
+  #   models:
+  #     default: ["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"]
+
+# Rate Limiting (optional)
+rateLimits:
+  # fileScanner: 5
+  # conversationImport: 5
+  # speechToText: 5
+
+# Registrierungseinstellungen
+registration:
+  socialLogins: []  # Keine Social Logins
+  # allowedDomains:
+  #   - "example.com"

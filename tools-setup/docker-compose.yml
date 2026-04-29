@@ -1,0 +1,146 @@
+# Docker Compose für Admin-Tools
+# Umami Analytics, Uptime Kuma, LibreTranslate, LibreChat
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Umami Analytics (Port 8001)
+  # ============================================
+  umami-db:
+    image: postgres:15-alpine
+    container_name: umami-db
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:-umami-secret-123}
+    volumes:
+      - umami-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: umami
+    ports:
+      - "8001:3000"
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-umami-secret-123}@umami-db:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${UMAMI_APP_SECRET:-replace-with-random-secret-min-32-chars}
+      TRACKER_SCRIPT_NAME: umami.js
+      DISABLE_TELEMETRY: 1
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ============================================
+  # Uptime Kuma (Port 3002)
+  # ============================================
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    ports:
+      - "3002:3001"
+    volumes:
+      - uptime-kuma-data:/app/data
+    restart: unless-stopped
+
+  # ============================================
+  # LibreTranslate (Port 5000)
+  # ============================================
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    container_name: libretranslate
+    ports:
+      - "5000:5000"
+    environment:
+      # Frontend deaktivieren (nur API)
+      LT_DISABLE_WEB_UI: "false"
+      # API-Key optional für Produktion
+      # LT_API_KEYS: "true"
+      # LT_REQUIRE_API_KEY_ORIGIN: "*"
+    volumes:
+      - libretranslate-data:/home/libretranslate/.local
+    restart: unless-stopped
+    command: --frontend-language "en" --load-only "en,de,fr,es,it,pt,ru,zh,ja,ko,ar,nl,pl,tr,sv,cs,da,fi,el,he,hi,hu,id,vi,th,uk,ro,bg,sr,hr,sk,sl,lt,lv,et,ta,te,ml"
+
+  # ============================================
+  # LibreChat (Port 3080)
+  # ============================================
+  librechat:
+    image: ghcr.io/danny-avila/librechat:latest
+    container_name: librechat
+    ports:
+      - "3080:3080"
+    depends_on:
+      - librechat-mongodb
+      - librechat-redis
+    environment:
+      # MongoDB Verbindung
+      MONGO_URI: mongodb://librechat-mongodb:27017/LibreChat
+      # Redis Verbindung
+      REDIS_URI: redis://librechat-redis:6379
+      # JWT Secret (ändern!)
+      JWT_SECRET: ${LIBRECHAT_JWT_SECRET:-change-this-secret-min-32-characters}
+      # JWT Session Expiry (Tage)
+      JWT_REFRESH_SECRET: ${LIBRECHAT_REFRESH_SECRET:-change-this-refresh-secret}
+      # Session Expiry
+      SESSION_EXPIRY: 1000 * 60 * 60 * 24 * 7
+      # Ollama Integration
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      # Endpoints aktivieren
+      ENDPOINTS: "ollama,openAI,azureOpenAI,google,gptPlugins,anthropic"
+      # Debug
+      DEBUG_LOGGING: "true"
+      # Allow Social Login
+      ALLOW_SOCIAL_LOGIN: "false"
+      # Domain (für lokale Nutzung leer lassen oder localhost)
+      DOMAIN_CLIENT: "http://localhost:3080"
+      DOMAIN_SERVER: "http://localhost:3080"
+    volumes:
+      - librechat-data:/app/.config/LibreChat
+      - ./librechat-config:/app/config
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  librechat-mongodb:
+    image: mongo:7
+    container_name: librechat-mongodb
+    volumes:
+      - librechat-mongodb-data:/data/db
+    restart: unless-stopped
+    command: mongod --noauth
+
+  librechat-redis:
+    image: redis:7-alpine
+    container_name: librechat-redis
+    volumes:
+      - librechat-redis-data:/data
+    restart: unless-stopped
+
+  # Optional: Meilisearch für LibreChat Suche
+  librechat-meilisearch:
+    image: getmeili/meilisearch:v1.7
+    container_name: librechat-meilisearch
+    environment:
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-meili-master-key-change-me}
+    volumes:
+      - librechat-meilisearch-data:/meili_data
+    restart: unless-stopped
+
+volumes:
+  umami-db-data:
+  uptime-kuma-data:
+  libretranslate-data:
+  librechat-data:
+  librechat-mongodb-data:
+  librechat-redis-data:
+  librechat-meilisearch-data:
